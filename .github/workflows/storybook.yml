@@ -1,0 +1,31 @@
+name: Storybook
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build storybook
+        run: ./build.sh storybook
+      - name: Upload artifact to Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: "storybook-static/"
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v5
