@@ -101,6 +101,8 @@ defineExpose({
 const query = ref('')
 const selected = ref(props.multiple ? [] : null) as any
 const showOptions = ref(false)
+// multiple selection: the list closes after an option is picked, so the chosen badges below the input stay visible
+const closedAfterPick = ref(false)
 const comboboxRef = ref<HTMLDivElement | null>(null)
 const userInputOptions = ref<NeComboboxOption[]>([])
 
@@ -359,6 +361,11 @@ function onClickOutsideCombobox() {
 }
 
 function onOptionSelected(selectedOption: NeComboboxOption) {
+  if (props.multiple) {
+    closedAfterPick.value = true
+    query.value = ''
+  }
+
   if (!props.multiple) {
     showOptions.value = false
     query.value = ''
@@ -431,6 +438,7 @@ function focus() {
 }
 
 function onInputClick() {
+  closedAfterPick.value = false
   showOptions.value = true
 
   if (props.externalFilter) {
@@ -439,6 +447,7 @@ function onInputClick() {
 }
 
 function onInputChange(event: Event) {
+  closedAfterPick.value = false
   query.value = (event.target as HTMLInputElement).value
   emit('filter', query.value)
 }
@@ -487,6 +496,7 @@ onClickOutside(comboboxRef, () => onClickOutsideCombobox())
           @click="onInputClick"
         />
         <ComboboxButton
+          @click="closedAfterPick = false"
           :class="[
             'absolute inset-y-0 right-0 flex items-center rounded-r-md pr-3 pl-4 text-gray-500 focus:outline-hidden dark:text-gray-400',
             { 'cursor-not-allowed opacity-50': disabled }
@@ -494,7 +504,7 @@ onClickOutside(comboboxRef, () => onClickOutsideCombobox())
         >
           <FontAwesomeIcon :icon="fasChevronDown" class="h-3 w-3 shrink-0" aria-hidden="true" />
         </ComboboxButton>
-        <div v-show="open || showOptions">
+        <div v-show="!closedAfterPick && (open || showOptions)">
           <div
             v-if="loadingOptions && (open || showOptions)"
             :style="{ width: customOptionsWidth }"
